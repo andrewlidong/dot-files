@@ -1,5 +1,5 @@
 # Theme — cool blue
-theme = TokyoNight Storm
+theme = TokyoNight Night
 
 # Font
 font-family = MonaspiceNe Nerd Font Mono
@@ -18,10 +18,6 @@ window-padding-balance = true
 window-save-state = always
 unfocused-split-opacity = 0.85
 
-# Heavy glass
-background-opacity = 0.80
-background-blur = 20
-
 # Cursor
 cursor-style = bar
 cursor-style-blink = true
@@ -31,3 +27,42 @@ mouse-hide-while-typing = true
 copy-on-select = clipboard
 confirm-close-surface = false
 macos-option-as-alt = true
+
+# Quake-style drop-down terminal (cmd+`)
+quick-terminal-position = top
+quick-terminal-animation-duration = 0.15
+keybind = global:cmd+grave_accent=toggle_quick_terminal
+
+# Splits — cmd+d / cmd+shift+d like iTerm
+keybind = cmd+d=new_split:right
+keybind = cmd+shift+d=new_split:down
+keybind = cmd+w=close_surface
+
+# Navigate splits — cmd+[ / cmd+]
+keybind = cmd+bracket_left=goto_split:previous
+keybind = cmd+bracket_right=goto_split:next
+
+# Resize splits — cmd+ctrl+arrows
+keybind = cmd+ctrl+left=resize_split:left,30
+keybind = cmd+ctrl+right=resize_split:right,30
+keybind = cmd+ctrl+up=resize_split:up,30
+keybind = cmd+ctrl+down=resize_split:down,30
+
+# Equalize splits
+keybind = cmd+alt+equal=equalize_splits
+
+# Tabs — cmd+t, cmd+{ / cmd+} to navigate
+keybind = cmd+t=new_tab
+keybind = cmd+shift+bracket_left=previous_tab
+keybind = cmd+shift+bracket_right=next_tab
+
+# Font size — cmd+= / cmd+- / cmd+0
+keybind = cmd+equal=increase_font_size:1
+keybind = cmd+minus=decrease_font_size:1
+keybind = cmd+zero=reset_font_size
+
+# Clear scrollback — cmd+k
+keybind = cmd+k=clear_screen
+
+# Reload config — cmd+shift+r
+keybind = cmd+shift+r=reload_config
