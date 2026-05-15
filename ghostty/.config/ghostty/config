@@ -1,0 +1,33 @@
+# Theme — cool blue
+theme = TokyoNight Storm
+
+# Font
+font-family = MonaspiceNe Nerd Font Mono
+font-size = 14
+font-feature = +calt
+font-feature = +liga
+font-feature = +ss01
+font-feature = +ss02
+adjust-cell-height = 10%
+
+# Window / chrome
+macos-titlebar-style = tabs
+window-padding-x = 16
+window-padding-y = 16
+window-padding-balance = true
+window-save-state = always
+unfocused-split-opacity = 0.85
+
+# Heavy glass
+background-opacity = 0.80
+background-blur = 20
+
+# Cursor
+cursor-style = bar
+cursor-style-blink = true
+mouse-hide-while-typing = true
+
+# QoL
+copy-on-select = clipboard
+confirm-close-surface = false
+macos-option-as-alt = true
