@@ -1,0 +1,3 @@
+.DS_Store
+# tpm clones plugins into the tmux config dir; they're fetched by install.sh.
+tmux/.config/tmux/plugins/

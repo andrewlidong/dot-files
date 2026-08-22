@@ -1,0 +1,84 @@
+# ─────────────────────────────────────────────────────────────
+#  Ghostty — reload with cmd+shift+, · validate with `ghostty +validate-config`
+#  Full reference: `ghostty +show-config --default --docs | less`
+# ─────────────────────────────────────────────────────────────
+
+# ─── Theme ───────────────────────────────────────────────────
+theme = TokyoNight Night
+
+# Selection / cursor pulled from the Tokyo Night palette so they
+# don't inherit muddy defaults.
+selection-background = #2e3c64
+selection-foreground = #c0caf5
+cursor-color         = #c0caf5
+cursor-text          = #1a1b26
+
+# ─── Font ────────────────────────────────────────────────────
+font-family        = JetBrainsMono Nerd Font
+font-family-bold   = JetBrainsMono Nerd Font
+font-family-italic = JetBrainsMono Nerd Font
+font-size          = 14
+font-thicken       = true
+
+# Breathing room between lines — the single biggest readability win.
+adjust-cell-height = 14%
+
+# Ligatures are on by default. Uncomment to kill them:
+# font-feature = -calt
+# font-feature = -liga
+
+# ─── Window chrome ───────────────────────────────────────────
+# Generous padding is what separates "nice" from "default".
+window-padding-x       = 16
+window-padding-y       = 12,8
+window-padding-balance = true
+window-padding-color   = background
+
+macos-titlebar-style = tabs
+# Fully chromeless alternative (you lose the drag area — cmd+drag
+# still moves the window on macOS):
+# macos-titlebar-style = hidden
+
+window-height = 46
+window-width  = 180
+
+# Translucent + blurred background. Set opacity to 1 if you want
+# zero transparency, or drop blur to 0 for a flat look.
+background-opacity   = 0.94
+background-blur      = 24
+unfocused-split-opacity = 0.88
+
+# ─── Cursor ──────────────────────────────────────────────────
+cursor-style             = block
+cursor-style-blink       = false
+mouse-hide-while-typing  = true
+
+# ─── Behavior ────────────────────────────────────────────────
+copy-on-select           = clipboard
+confirm-close-surface    = false
+window-save-state        = always
+scrollback-limit         = 100000
+shell-integration        = zsh
+shell-integration-features = cursor,sudo,title
+
+# Makes option behave as Alt so M-b / M-f / M-hjkl reach zsh and tmux.
+macos-option-as-alt = true
+
+# Kill the audible bell; flash the window instead.
+# (Remove `attention` if you don't want the dock bounce.)
+bell-features = system,attention
+
+# ─── Keybinds ────────────────────────────────────────────────
+# tmux owns splits and tabs, so Ghostty's own bindings stay minimal.
+
+# Dropdown terminal from anywhere in macOS. Grant Accessibility
+# permission the first time it's used.
+keybind = global:cmd+grave_accent=toggle_quick_terminal
+
+# Quality-of-life
+keybind = cmd+shift+enter=toggle_split_zoom
+keybind = cmd+k=clear_screen
+
+# Ghostty splits are still here if you want a throwaway pane:
+#   cmd+d / cmd+shift+d  → split right / down
+#   cmd+opt+arrow        → focus split

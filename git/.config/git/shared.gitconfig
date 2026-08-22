@@ -1,0 +1,101 @@
+# ─────────────────────────────────────────────────────────────
+#  Shared git config — pulled in from ~/.gitconfig via [include].
+#  Machine-specific things (credential helpers, user.email for a
+#  work machine) stay in ~/.gitconfig, which is NOT in this repo.
+# ─────────────────────────────────────────────────────────────
+
+[core]
+	pager = delta
+	excludesfile = ~/.config/git/ignore
+	fsmonitor = true
+	untrackedCache = true
+
+[interactive]
+	diffFilter = delta --color-only
+
+[delta]
+	navigate = true              # n / N to jump between file hunks
+	line-numbers = true
+	hyperlinks = true
+	syntax-theme = tokyonight_night
+	file-style = "bold #7aa2f7"
+	file-decoration-style = "#3b4261 ul"
+	hunk-header-decoration-style = "#3b4261 box"
+	line-numbers-minus-style = "#f7768e"
+	line-numbers-plus-style = "#9ece6a"
+	line-numbers-zero-style = "#3b4261"
+	minus-style = "syntax #3f2d3d"
+	minus-emph-style = "syntax #763842"
+	plus-style = "syntax #283b4d"
+	plus-emph-style = "syntax #316172"
+	# side-by-side = true        # uncomment if you like two columns
+
+[merge]
+	conflictstyle = zdiff3        # shows the common ancestor in conflicts
+
+[diff]
+	algorithm = histogram         # noticeably better hunks than the default
+	colorMoved = default
+	mnemonicPrefix = true
+	renames = true
+
+[init]
+	defaultBranch = main
+
+[push]
+	default = simple
+	autoSetupRemote = true        # no more --set-upstream
+	followTags = true
+
+[pull]
+	rebase = true
+
+[rebase]
+	autoStash = true
+	autoSquash = true
+	updateRefs = true             # keeps stacked branches pointing correctly
+
+[fetch]
+	prune = true
+	pruneTags = true
+
+[branch]
+	sort = -committerdate         # `git branch` lists most recent first
+
+[tag]
+	sort = version:refname
+
+[column]
+	ui = auto
+
+[rerere]
+	enabled = true                # remember conflict resolutions
+	autoupdate = true
+
+[help]
+	autocorrect = prompt
+
+[log]
+	date = iso
+
+[status]
+	showUntrackedFiles = all
+	submoduleSummary = true
+
+[pretty]
+	fancy = "%C(bold blue)%h%C(reset) %C(dim white)%ad%C(reset) %C(auto)%d%C(reset) %s %C(dim cyan)<%an>%C(reset)"
+
+[alias]
+	s = status --short --branch
+	last = log -1 HEAD --stat
+	graph = log --graph --pretty=fancy --abbrev-commit
+	undo = reset --soft HEAD~1
+	amend = commit --amend --no-edit
+	unstage = restore --staged
+	wip = "!git add -A && git commit -m 'wip'"
+	# Branches, most recently touched first.
+	recent = "!git for-each-ref --sort=-committerdate --count=15 --format='%(color:blue)%(refname:short)%(color:reset) %(color:dim white)%(committerdate:relative)%(color:reset)' refs/heads/"
+	# What's on this branch that isn't on main.
+	mine = "!git log --pretty=fancy origin/main..HEAD"
+	# Files that change together most often.
+	churn = "!git log --all -M -C --name-only --format='format:' | sed '/^$/d' | sort | uniq -c | sort -rn | head -20"

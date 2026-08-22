@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# tmux-sessionizer — fzf-pick a project and land in a tmux session named after it.
+#
+#   tmux-sessionizer            → interactive picker
+#   tmux-sessionizer ~/some/dir → jump straight there
+#
+# Bound to  C-a f  in tmux.conf. Works both inside and outside tmux.
+
+set -euo pipefail
+
+# Where to look for projects. Add your own roots here.
+ROOTS=(
+  "$HOME/conductor/repos"
+  "$HOME/src"
+  "$HOME/code"
+  "$HOME/work"
+  "$HOME/Developer"
+  "$HOME/projects"
+)
+
+# Directories that are always offered, even if they aren't under a root.
+ALWAYS=(
+  "$HOME/dotfiles"
+  "$HOME/surge-toolbox"
+  "$HOME/.config"
+)
+
+list_candidates() {
+  local existing=()
+  for r in "${ROOTS[@]}"; do [[ -d "$r" ]] && existing+=("$r"); done
+
+  # Any git repo up to 3 levels under a root …
+  if ((${#existing[@]})); then
+    if command -v fd >/dev/null 2>&1; then
+      fd --hidden --no-ignore --type d --max-depth 3 '^\.git$' "${existing[@]}" 2>/dev/null \
+        | sed 's|/\.git/*$||'
+    else
+      find "${existing[@]}" -maxdepth 3 -type d -name .git 2>/dev/null \
+        | sed 's|/\.git$||'
+    fi
+    # … plus the immediate children of each root, so non-git dirs show up too.
+    find "${existing[@]}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null
+  fi
+
+  # Git repos sitting directly in $HOME.
+  find "$HOME" -mindepth 1 -maxdepth 2 -type d -name .git 2>/dev/null | sed 's|/\.git$||'
+
+  for a in "${ALWAYS[@]}"; do [[ -d "$a" ]] && echo "$a"; done
+}
+
+if [[ $# -eq 1 ]]; then
+  selected="$1"
+else
+  selected=$(list_candidates | sed "s|^$HOME/|~/|" | sort -u | fzf \
+    --height=100% \
+    --border=rounded \
+    --border-label=" projects " \
+    --prompt="  " \
+    --pointer="▶" \
+    --preview='eza --tree --level=2 --color=always --icons=always --group-directories-first $(echo {} | sed "s|^~|'"$HOME"'|") 2>/dev/null || ls -la $(echo {} | sed "s|^~|'"$HOME"'|")' \
+    --preview-window='right,55%,border-left') || exit 0
+  # Expand the ~ we displayed back into a real path.
+  selected="${selected/#\~/$HOME}"
+fi
+
+[[ -z "$selected" ]] && exit 0
+[[ -d "$selected" ]] || { echo "not a directory: $selected" >&2; exit 1; }
+
+# tmux session names can't contain . or : — and spaces are a nuisance.
+name=$(basename "$selected" | tr '. :' '___')
+
+if ! tmux has-session -t="$name" 2>/dev/null; then
+  tmux new-session -ds "$name" -c "$selected"
+fi
+
+if [[ -n "${TMUX:-}" ]]; then
+  tmux switch-client -t "$name"      # already inside tmux
+else
+  tmux attach-session -t "$name"     # bare shell
+fi

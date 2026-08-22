@@ -1,0 +1,20 @@
+# Global gitignore — things that should never land in any repo.
+.DS_Store
+.AppleDouble
+._*
+.Spotlight-V100
+.Trashes
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+.direnv/
+.env.local
+node_modules/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.log
+.claude/settings.local.json

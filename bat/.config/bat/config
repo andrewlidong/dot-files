@@ -1,0 +1,6 @@
+# bat — run `bat cache --build` after changing themes/ dir.
+--theme="tokyonight_night"
+--style="numbers,changes,header-filename"
+--italic-text=always
+--paging=auto
+--tabs=2
