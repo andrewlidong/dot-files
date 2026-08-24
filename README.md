@@ -119,22 +119,31 @@ resurrect + continuum save every 15 min and restore on server start.
 
 ## Ghostty
 
-Deliberately minimal, since tmux does the splitting.
+tmux owns the day-to-day splitting, but the native bindings are all here for
+throwaway panes outside a session. Everything is Cmd-based, so none of it
+collides with tmux's `C-a`.
 
-| Key                | Does                                     |
-| ------------------ | ---------------------------------------- |
-| `cmd+``            | **quick terminal** — dropdown from anywhere in macOS |
-| `cmd+shift+enter`  | zoom split                               |
-| `cmd+k`            | clear screen                             |
-| `cmd+shift+,`      | reload config                            |
-| `cmd+d` / `cmd+shift+d` | native split right / down (still there if you want it) |
+| Key                      | Does                                          |
+| ------------------------ | --------------------------------------------- |
+| ``cmd+` ``               | **quick terminal** — drops down from the top   |
+| `cmd+d` / `cmd+shift+d`  | split right / down                            |
+| `cmd+[` / `cmd+]`        | previous / next split                         |
+| `cmd+ctrl+arrows`        | resize split by 30                            |
+| `cmd+alt+=`              | equalize splits                               |
+| `cmd+shift+enter`        | zoom split                                    |
+| `cmd+w`                  | close split/tab                               |
+| `cmd+t`                  | new tab                                       |
+| `cmd+shift+[` / `]`      | previous / next tab                           |
+| `cmd+=` / `cmd+-` / `cmd+0` | font size up / down / reset                |
+| `cmd+k`                  | clear screen                                  |
+| `cmd+shift+r`            | reload config (`cmd+shift+,` also works)      |
 
 The quick terminal needs Accessibility permission the first time.
 
 Knobs worth knowing in `ghostty/.config/ghostty/config`: `background-opacity`
 (0.94) and `background-blur` (24) for translucency, `adjust-cell-height` (14%)
-for line spacing, and `macos-titlebar-style` — swap `tabs` for `hidden` if you
-want zero chrome.
+for line spacing, `cursor-style` (bar, blinking), and `macos-titlebar-style` —
+swap `tabs` for `hidden` if you want zero chrome.
 
 ## Shell
 
