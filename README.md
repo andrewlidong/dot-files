@@ -10,8 +10,12 @@ zsh/        → ~/.zshrc
 starship/   → ~/.config/starship.toml
 bat/        → ~/.config/bat/{config,themes/}
 git/        → ~/.config/git/{shared.gitconfig,ignore}
-bin/        → ~/.local/bin/tmux-sessionizer
+bin/        → ~/.local/bin/{tmux-sessionizer,dotfiles-doctor}
 ```
+
+Run **`dotfiles-doctor`** any time to verify everything is installed, linked,
+and rendering — it checks symlinks, tools, config validity, and prints colour
+and Nerd Font samples for your eyes. Exits non-zero if anything is broken.
 
 ## New machine
 

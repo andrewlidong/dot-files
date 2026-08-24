@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+# dotfiles-doctor — verify the setup is installed, wired up, and rendering.
+# Safe to run any time. Exits non-zero if anything is actually broken.
+
+DOT="$HOME/dotfiles"
+pass=0; fail=0; warn=0
+
+C_OK=$'\033[32m'; C_NO=$'\033[31m'; C_WARN=$'\033[33m'
+C_HEAD=$'\033[1;38;2;122;162;247m'; C_DIM=$'\033[2m'; C_R=$'\033[0m'
+
+head() { printf '\n%s── %s %s%s\n' "$C_HEAD" "$1" "$(printf '─%.0s' $(seq 1 $((60-${#1}))))" "$C_R"; }
+ok()   { printf '  %s✓%s %s\n' "$C_OK" "$C_R" "$1"; pass=$((pass+1)); }
+no()   { printf '  %s✗%s %s\n' "$C_NO" "$C_R" "$1"; fail=$((fail+1)); }
+wa()   { printf '  %s!%s %s\n' "$C_WARN" "$C_R" "$1"; warn=$((warn+1)); }
+note() { printf '    %s%s%s\n' "$C_DIM" "$1" "$C_R"; }
+
+# ── Symlinks ────────────────────────────────────────────────
+head "symlinks"
+check_link() {
+  if [[ -L "$1" ]]; then
+    [[ -e "$1" ]] && ok "$(basename "$1") → $(readlink "$1")" \
+                  || no "$(basename "$1") is a BROKEN symlink"
+  elif [[ -e "$1" ]]; then
+    no "$(basename "$1") exists but is NOT a symlink (stow didn't run?)"
+  else
+    no "$(basename "$1") missing — run: cd ~/dotfiles && stow ${2}"
+  fi
+}
+check_link "$HOME/.zshrc" zsh
+check_link "$HOME/.config/ghostty" ghostty
+check_link "$HOME/.config/tmux" tmux
+check_link "$HOME/.config/starship.toml" starship
+check_link "$HOME/.config/bat" bat
+check_link "$HOME/.config/git" git
+check_link "$HOME/.local/bin/tmux-sessionizer" bin
+
+# ── Binaries ────────────────────────────────────────────────
+head "tools on PATH"
+for t in tmux starship fzf zoxide eza bat fd rg delta lazygit btop stow; do
+  command -v "$t" >/dev/null 2>&1 && ok "$t" || no "$t — brew install $t"
+done
+
+# ── Ghostty ─────────────────────────────────────────────────
+head "ghostty"
+G="/Applications/Ghostty.app/Contents/MacOS/ghostty"
+if [[ -x "$G" ]]; then
+  if out=$("$G" +validate-config 2>&1); [[ -z "$out" ]]; then
+    ok "config validates"
+  else
+    no "config has errors:"; note "$out"
+  fi
+  eff=$("$G" +show-config 2>/dev/null)
+  for kv in "theme = TokyoNight Night" "font-family = JetBrainsMono Nerd Font" \
+            "cursor-style = bar" "background-opacity = 0.94" "macos-option-as-alt = true"; do
+    grep -qxF "$kv" <<<"$eff" && ok "$kv" || wa "expected '$kv' — not the effective value"
+  done
+  n=$(grep -c '^keybind' <<<"$eff")
+  [[ "$n" -gt 90 ]] && ok "$n keybinds loaded" || wa "only $n keybinds"
+else
+  no "Ghostty not found at $G"
+fi
+
+if compgen -G "$HOME/Library/Fonts/JetBrainsMono*" >/dev/null; then
+  ok "JetBrainsMono Nerd Font installed"
+else
+  no "JetBrainsMono Nerd Font missing — brew install --cask font-jetbrains-mono-nerd-font"
+fi
+
+# ── tmux ────────────────────────────────────────────────────
+head "tmux"
+if command -v tmux >/dev/null 2>&1; then
+  tmpsock="dotfiles-doctor-$$"
+  if tmux -L "$tmpsock" -f "$HOME/.config/tmux/tmux.conf" new-session -d -s t 2>/tmp/tmuxerr.$$; then
+    ok "tmux.conf parses with no errors"
+    p=$(tmux -L "$tmpsock" show -gv prefix)
+    [[ "$p" == "C-a" ]] && ok "prefix is C-a" || wa "prefix is $p, expected C-a"
+    sl=$(tmux -L "$tmpsock" show -gv status-left)
+    grep -q '#7aa2f7' <<<"$sl" && ok "status line has Tokyo Night colors" \
+      || no "status line colors did not expand (\${VAR} issue)"
+    [[ "$(tmux -L "$tmpsock" show -gv @continuum-restore)" == "on" ]] \
+      && ok "continuum auto-restore on" || wa "continuum not enabled"
+    tmux -L "$tmpsock" kill-server 2>/dev/null
+  else
+    no "tmux.conf failed to parse:"; note "$(cat /tmp/tmuxerr.$$)"
+  fi
+  rm -f /tmp/tmuxerr.$$
+  for p in tpm tmux-resurrect tmux-continuum tmux-sensible; do
+    [[ -d "$HOME/.config/tmux/plugins/$p" ]] && ok "plugin: $p" \
+      || wa "plugin missing: $p — open tmux and press C-a I"
+  done
+else
+  no "tmux not installed"
+fi
+
+# ── zsh ─────────────────────────────────────────────────────
+head "zsh"
+zsh -n "$HOME/.zshrc" 2>/dev/null && ok ".zshrc has valid syntax" || no ".zshrc has a syntax error"
+B=/opt/homebrew
+[[ -f "$B/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]] && ok "autosuggestions" || no "autosuggestions missing"
+[[ -f "$B/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]] && ok "syntax highlighting" || no "syntax highlighting missing"
+[[ -f "$HOME/.config/zsh/plugins/fzf-tab/fzf-tab.plugin.zsh" ]] && ok "fzf-tab" \
+  || wa "fzf-tab missing — git clone https://github.com/Aloxaf/fzf-tab ~/.config/zsh/plugins/fzf-tab"
+command -v mise >/dev/null 2>&1 && ok "mise on PATH" || wa "mise not on PATH in this shell"
+
+# ── prompt / colors ─────────────────────────────────────────
+head "starship"
+if command -v starship >/dev/null 2>&1; then
+  if starship prompt >/dev/null 2>/tmp/sserr.$$; then
+    ok "prompt renders without error"
+  else
+    no "prompt errored:"; note "$(cat /tmp/sserr.$$)"
+  fi
+  rm -f /tmp/sserr.$$
+  [[ -L "$HOME/.config/starship.toml" ]] && ok "using the repo's starship.toml" || wa "starship.toml not linked"
+fi
+
+# ── bat / delta ─────────────────────────────────────────────
+head "bat + delta"
+if command -v bat >/dev/null 2>&1; then
+  bat --list-themes 2>/dev/null | grep -q tokyonight_night \
+    && ok "tokyonight_night theme cached" \
+    || no "theme not cached — run: bat cache --build"
+fi
+[[ "$(git config --get core.pager)" == "delta" ]] && ok "git uses delta as pager" || no "core.pager is not delta"
+[[ "$(git config --get delta.syntax-theme)" == "tokyonight_night" ]] && ok "delta uses the Tokyo Night theme" || wa "delta syntax-theme unexpected"
+idn="$(git config --get user.name) <$(git config --get user.email)>"
+[[ "$idn" == "Andrew Dong <andrewdong1994@gmail.com>" ]] && ok "git identity: $idn" || wa "git identity: $idn"
+
+# ── Visual checks (these need your eyes) ────────────────────
+head "look at these"
+printf '  truecolor gradient (should be smooth, not banded):\n    '
+for i in $(seq 0 60); do printf '\033[48;2;%d;%d;%dm ' $((26+i*3)) $((27+i*2)) $((38+i*3)); done; printf '%s\n' "$C_R"
+
+printf '  Tokyo Night palette:\n    '
+for c in 1a1b26 24283b 565f89 7aa2f7 bb9af7 7dcfff 9ece6a e0af68 ff9e64 f7768e c0caf5; do
+  printf '\033[48;2;%d;%d;%dm   ' 0x${c:0:2} 0x${c:2:2} 0x${c:4:2}
+done; printf '%s\n' "$C_R"
+
+printf '  Nerd Font glyphs (boxes/? = font not applied):\n'
+printf '        \n'
+printf '    powerline caps:     \n'
+
+printf '  prompt preview:\n    '
+command -v starship >/dev/null 2>&1 && (cd "$DOT" && starship prompt) && printf '\n'
+
+# ── Summary ─────────────────────────────────────────────────
+head "result"
+printf '  %s%d passed%s   %s%d warnings%s   %s%d failed%s\n\n' \
+  "$C_OK" "$pass" "$C_R" "$C_WARN" "$warn" "$C_R" "$C_NO" "$fail" "$C_R"
+if [[ "$fail" -gt 0 ]]; then
+  printf '  Fix the ✗ items above, then re-run.\n\n'; exit 1
+fi
+printf '  Everything wired up. If the glyphs above looked like boxes,\n'
+printf '  fully quit Ghostty (cmd+Q) and reopen it.\n\n'
