@@ -22,6 +22,9 @@ brew "ripgrep"                   # grep
 brew "git-delta"                 # git diff pager
 brew "tree"
 
+# ─── Safety ──────────────────────────────────────────────────
+brew "gitleaks"                  # pre-commit secret scan (hooks/pre-commit)
+
 # ─── TUIs ────────────────────────────────────────────────────
 brew "lazygit"
 brew "btop"

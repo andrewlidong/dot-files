@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# ─────────────────────────────────────────────────────────────
+#  pre-commit — keep secrets out of a public repo.
+#
+#  Enabled by install.sh:
+#    git -C ~/dotfiles config core.hooksPath hooks
+#  Scoped to this repo only; other clones on this machine are untouched.
+#
+#  Scans just the staged patch, so an ordinary commit pays ~no cost.
+#  False positive?  git commit --no-verify
+# ─────────────────────────────────────────────────────────────
+set -uo pipefail
+
+C_NO=$'\033[31m'; C_WARN=$'\033[33m'; C_R=$'\033[0m'
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  printf '%s!%s gitleaks not installed — staged changes were NOT scanned.\n' "$C_WARN" "$C_R" >&2
+  printf '    brew install gitleaks   (or: brew bundle install)\n' >&2
+  exit 0
+fi
+
+if ! gitleaks git --staged --no-banner --redact --verbose; then
+  printf '\n%s✗ commit blocked — a staged change looks like a secret.%s\n' "$C_NO" "$C_R" >&2
+  printf '  This repo is public. A secret that lands here has to be rotated,\n' >&2
+  printf '  not just deleted — the old commit stays reachable in history.\n\n' >&2
+  printf '  Real secret?      move it to ~/.zshrc.local, which is untracked.\n' >&2
+  printf '  False positive?   git commit --no-verify\n' >&2
+  exit 1
+fi

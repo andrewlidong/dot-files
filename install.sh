@@ -101,7 +101,18 @@ else
 fi
 ok "git configured"
 
-# ─── 8. Nudges ────────────────────────────────────────────────
+# ─── 8. Secret-scanning pre-commit hook ───────────────────────
+# This repo is public, so a leaked secret would have to be rotated rather
+# than just removed. Scoped to this repo — other clones stay untouched.
+git -C "$DOTFILES" config core.hooksPath hooks
+if command -v gitleaks >/dev/null 2>&1; then
+  ok "pre-commit secret scan enabled"
+else
+  warn "pre-commit hook wired up, but gitleaks is missing — commits won't be scanned"
+  warn "  brew install gitleaks"
+fi
+
+# ─── 9. Nudges ────────────────────────────────────────────────
 printf '\n'
 ok "done. next:"
 echo "   • Ghostty → restart it (or cmd+shift+, to reload)"
