@@ -240,8 +240,14 @@ treesitter-textobjects already uses `]c`/`[c` for "next class".
 ### Syntax — treesitter
 
 Real parsing, so `daf` deletes a whole method, `cif` changes a function body,
-`vac` selects a class, and `]f`/`[f` jump between functions. `C-space` starts a
-selection at the node under the cursor and widens it each press.
+`vac` selects a class, `aa`/`ia` grab an argument, and `]f`/`[f` and `]c`/`[c`
+jump between functions and classes.
+
+Pinned to the **`main`** branch. `master` is frozen and states outright that it
+does not support Neovim 0.12 — on 0.12 its highlighter throws mid-redraw, so
+every buffer renders unhighlighted while nothing obviously errors. Parsers are
+compiled by the `tree-sitter-cli` formula; the similarly-named `tree-sitter`
+formula is the library and ships no binary.
 
 Splits open right and below, matching `C-a |` and `C-a -` in tmux. Yanks go to
 the macOS clipboard, and undo history survives closing a file.

@@ -26,7 +26,10 @@ brew "tree"
 brew "gitleaks"                  # pre-commit secret scan (hooks/pre-commit)
 
 # ─── Editor ──────────────────────────────────────────────────
-brew "neovim"                    # config in nvim/, colourscheme via install.sh
+brew "neovim"                    # config in nvim/, plugins via lazy.nvim
+brew "tree-sitter-cli"           # nvim-treesitter (main) compiles parsers with it
+                                 # note: the `tree-sitter` formula is the library
+                                 # only and ships no binary — this is the CLI
 
 # ─── TUIs ────────────────────────────────────────────────────
 brew "lazygit"

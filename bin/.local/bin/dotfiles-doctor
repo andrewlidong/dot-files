@@ -37,7 +37,7 @@ check_link "$HOME/.local/bin/tmux-sessionizer" bin
 
 # ── Binaries ────────────────────────────────────────────────
 head "tools on PATH"
-for t in tmux starship fzf zoxide eza bat fd rg delta lazygit btop stow nvim gitleaks; do
+for t in tmux starship fzf zoxide eza bat fd rg delta lazygit btop stow nvim gitleaks tree-sitter; do
   command -v "$t" >/dev/null 2>&1 && ok "$t" || no "$t — brew install $t"
 done
 
@@ -110,6 +110,17 @@ if command -v nvim >/dev/null 2>&1; then
   np=$(nvim --headless -c 'lua io.write(vim.tbl_count(require("lazy.core.config").plugins))' -c 'qa' 2>&1)
   [[ "$np" =~ ^[0-9]+$ ]] && ok "$np plugins loaded by lazy.nvim" \
                           || no "lazy.nvim not reporting plugins: $np"
+  ts=$(nvim --headless -c 'lua io.write(#require("nvim-treesitter.config").get_installed("parsers"))' -c 'qa' 2>&1)
+  [[ "$ts" =~ ^[0-9]+$ && "$ts" -ge 10 ]] && ok "$ts treesitter parsers installed" \
+                                          || wa "treesitter parsers: $ts (run :TSInstall)"
+  # Loading cleanly is not the same as painting: nvim-treesitter master threw
+  # mid-redraw on 0.12, so every buffer rendered flat while all of the above
+  # still passed. Force an actual draw of a real file.
+  if err=$(nvim --headless "$DOT/README.md" -c 'redraw' -c 'qa!' 2>&1); [[ -z "$err" ]]; then
+    ok "highlighting renders without errors"
+  else
+    no "treesitter errors while drawing:"; note "$(head -3 <<<"$err")"
+  fi
   [[ "$EDITOR" == nvim ]] && ok "EDITOR=nvim" || wa "EDITOR=$EDITOR (open a new shell?)"
 else
   wa "nvim not installed — EDITOR falls back to vim"
