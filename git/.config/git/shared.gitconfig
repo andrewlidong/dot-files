@@ -1,8 +1,12 @@
 # ─────────────────────────────────────────────────────────────
 #  Shared git config — pulled in from ~/.gitconfig via [include].
-#  Machine-specific things (credential helpers, user.email for a
-#  work machine) stay in ~/.gitconfig, which is NOT in this repo.
+#  Machine-specific things (credential helpers) stay in
+#  ~/.gitconfig, which is NOT in this repo.
 # ─────────────────────────────────────────────────────────────
+
+[user]
+	name = Andrew Dong
+	email = andrewdong1994@gmail.com
 
 [core]
 	pager = delta
