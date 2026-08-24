@@ -137,7 +137,7 @@ if [[ -f "$BREW_PREFIX/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]]; th
 fi
 
 # ─── Tools ───────────────────────────────────────────────────
-eval "$($HOME/.local/bin/mise activate zsh)"
+command -v mise     >/dev/null 2>&1 && eval "$(mise activate zsh)"
 command -v starship >/dev/null 2>&1 && eval "$(starship init zsh)"
 command -v zoxide   >/dev/null 2>&1 && eval "$(zoxide init zsh)"   # z / zi
 

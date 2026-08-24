@@ -6,6 +6,7 @@ cask "ghostty"
 brew "tmux"
 
 # ─── Shell ───────────────────────────────────────────────────
+brew "mise"                      # runtime/version manager (.zshrc activates it)
 brew "starship"                  # prompt
 brew "zsh-autosuggestions"
 brew "zsh-syntax-highlighting"
