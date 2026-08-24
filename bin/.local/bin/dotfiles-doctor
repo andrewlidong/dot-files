@@ -32,11 +32,12 @@ check_link "$HOME/.config/tmux" tmux
 check_link "$HOME/.config/starship.toml" starship
 check_link "$HOME/.config/bat" bat
 check_link "$HOME/.config/git" git
+check_link "$HOME/.config/nvim" nvim
 check_link "$HOME/.local/bin/tmux-sessionizer" bin
 
 # ── Binaries ────────────────────────────────────────────────
 head "tools on PATH"
-for t in tmux starship fzf zoxide eza bat fd rg delta lazygit btop stow; do
+for t in tmux starship fzf zoxide eza bat fd rg delta lazygit btop stow nvim gitleaks; do
   command -v "$t" >/dev/null 2>&1 && ok "$t" || no "$t — brew install $t"
 done
 
@@ -90,6 +91,25 @@ if command -v tmux >/dev/null 2>&1; then
   done
 else
   no "tmux not installed"
+fi
+
+# ── neovim ──────────────────────────────────────────────────
+head "neovim"
+if command -v nvim >/dev/null 2>&1; then
+  if out=$(nvim --headless -c 'quitall' 2>&1); [[ -z "$out" ]]; then
+    ok "init.lua loads with no errors or deprecations"
+  else
+    no "init.lua complained:"; note "$out"
+  fi
+  cs=$(nvim --headless -c 'echo g:colors_name' -c 'quitall' 2>&1)
+  [[ "$cs" == tokyonight* ]] && ok "colorscheme: $cs" \
+                             || no "colorscheme is '$cs', expected tokyonight"
+  [[ -d "$HOME/.local/share/nvim/site/pack/colors/start/tokyonight.nvim" ]] \
+    && ok "tokyonight.nvim installed" \
+    || no "tokyonight missing — run ~/dotfiles/install.sh"
+  [[ "$EDITOR" == nvim ]] && ok "EDITOR=nvim" || wa "EDITOR=$EDITOR (open a new shell?)"
+else
+  wa "nvim not installed — EDITOR falls back to vim"
 fi
 
 # ── zsh ─────────────────────────────────────────────────────

@@ -25,6 +25,9 @@ brew "tree"
 # ─── Safety ──────────────────────────────────────────────────
 brew "gitleaks"                  # pre-commit secret scan (hooks/pre-commit)
 
+# ─── Editor ──────────────────────────────────────────────────
+brew "neovim"                    # config in nvim/, colourscheme via install.sh
+
 # ─── TUIs ────────────────────────────────────────────────────
 brew "lazygit"
 brew "btop"

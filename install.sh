@@ -7,7 +7,7 @@
 set -euo pipefail
 
 DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PACKAGES=(ghostty tmux zsh starship bat git bin)
+PACKAGES=(ghostty tmux zsh starship bat git bin nvim)
 SKIP_BREW=false
 [[ "${1:-}" == "--no-brew" ]] && SKIP_BREW=true
 
@@ -66,13 +66,23 @@ if [[ ! -d "$FZF_TAB" ]]; then
 fi
 ok "fzf-tab ready"
 
-# ─── 6. bat theme cache ───────────────────────────────────────
+# ─── 6. neovim colourscheme ───────────────────────────────────
+# No plugin manager — nvim loads anything under site/pack/*/start
+# on its own, so a plain clone is the whole install.
+TOKYONIGHT="$HOME/.local/share/nvim/site/pack/colors/start/tokyonight.nvim"
+if [[ ! -d "$TOKYONIGHT" ]]; then
+  info "cloning tokyonight.nvim"
+  git clone -q --depth 1 https://github.com/folke/tokyonight.nvim "$TOKYONIGHT"
+fi
+ok "tokyonight ready"
+
+# ─── 7. bat theme cache ───────────────────────────────────────
 if command -v bat >/dev/null 2>&1; then
   info "building bat theme cache"
   bat cache --build >/dev/null 2>&1 && ok "bat themes built"
 fi
 
-# ─── 7. Wire the shared git config into ~/.gitconfig ──────────
+# ─── 8. Wire the shared git config into ~/.gitconfig ──────────
 # ~/.gitconfig stays machine-local (credential helpers, identity);
 # it just includes the shared file from this repo.
 if ! git config --global --get-all include.path 2>/dev/null | grep -qx "$HOME/.config/git/shared.gitconfig"; then
@@ -101,7 +111,7 @@ else
 fi
 ok "git configured"
 
-# ─── 8. Secret-scanning pre-commit hook ───────────────────────
+# ─── 9. Secret-scanning pre-commit hook ───────────────────────
 # This repo is public, so a leaked secret would have to be rotated rather
 # than just removed. Scoped to this repo — other clones stay untouched.
 git -C "$DOTFILES" config core.hooksPath hooks
@@ -112,7 +122,7 @@ else
   warn "  brew install gitleaks"
 fi
 
-# ─── 9. Nudges ────────────────────────────────────────────────
+# ─── 10. Nudges ───────────────────────────────────────────────
 printf '\n'
 ok "done. next:"
 echo "   • Ghostty → restart it (or cmd+shift+, to reload)"

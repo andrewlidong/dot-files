@@ -10,6 +10,7 @@ zsh/        → ~/.zshrc
 starship/   → ~/.config/starship.toml
 bat/        → ~/.config/bat/{config,themes/}
 git/        → ~/.config/git/{shared.gitconfig,ignore}
+nvim/       → ~/.config/nvim/init.lua
 bin/        → ~/.local/bin/{tmux-sessionizer,dotfiles-doctor}
 hooks/      → git hooks for this repo itself (not stowed)
 ```
@@ -26,8 +27,9 @@ git clone <this-repo> ~/dotfiles && cd ~/dotfiles && ./install.sh
 
 Idempotent — re-run it any time. It installs the Brewfile, backs up any real
 file that would collide (as `*.pre-dotfiles.<timestamp>`), stows every package,
-fetches tpm + fzf-tab, builds the bat theme cache, adds an `[include]` line to
-`~/.gitconfig`, and points this repo's `core.hooksPath` at `hooks/`.
+fetches tpm + fzf-tab + tokyonight.nvim, builds the bat theme cache, adds an
+`[include]` line to `~/.gitconfig`, and points this repo's `core.hooksPath`
+at `hooks/`.
 
 ## How it fits together
 
@@ -185,6 +187,34 @@ Aliases: `ls`/`l`/`ll`/`la`/`lt` (eza), `lg` (lazygit), `gs`/`gd`/`gl`/… (git)
 `ts`/`ta`/`tl` (tmux), `k` (kubectl), `ports`, `path`, `reload`.
 `help <cmd>` pipes `--help` through bat.
 
+## Editor
+
+`EDITOR` is neovim when it's installed and plain vim otherwise, and `vim` is
+aliased to `nvim` so the muscle memory still lands. `C-a e` in tmux opens a
+popup on whatever `$EDITOR` resolves to.
+
+The config is a single ~70-line `nvim/.config/nvim/init.lua` with no plugin
+manager. The one plugin is the Tokyo Night colourscheme, which `install.sh`
+clones into nvim's native `~/.local/share/nvim/site/pack/colors/start/` — nvim
+loads anything there by itself, so there's no bootstrap on first run.
+
+| Key                       | Does                                        |
+| ------------------------- | ------------------------------------------- |
+| `Space`                   | leader                                      |
+| `<leader>w` / `<leader>q` | write / quit                                |
+| `Esc`                     | clear search highlight                      |
+| `C-h/j/k/l`               | move between splits — same hjkl as tmux     |
+| `C-d` / `C-u`             | half page, cursor stays centred             |
+| `J`                       | join lines without moving the cursor        |
+| `<` / `>` in visual       | indent, keeping the selection               |
+
+Splits open right and below, matching `C-a |` and `C-a -` in tmux. Yanks go to
+the macOS clipboard, and undo history survives closing a file.
+
+To grow it, add files under `nvim/.config/nvim/lua/` and `require` them from
+`init.lua`. tmux-resurrect already has `@resurrect-strategy-nvim 'session'` set,
+so nvim sessions come back with the tmux session.
+
 ## Where the colors live
 
 Tokyo Night hexes are duplicated in a few places by necessity — each tool has
@@ -195,6 +225,7 @@ its own config format:
 - `starship` — inline per module
 - `zsh` — `FZF_DEFAULT_OPTS`, autosuggest style, `ZSH_HIGHLIGHT_STYLES`
 - `bat` / `delta` — `bat/.config/bat/themes/tokyonight_night.tmTheme`
+- `nvim` — `folke/tokyonight.nvim`, same author as the bat theme above
 
 Palette: bg `#1a1b26` · bg-alt `#24283b` · fg `#c0caf5` · grey `#565f89`
 blue `#7aa2f7` · purple `#bb9af7` · cyan `#7dcfff` · green `#9ece6a`

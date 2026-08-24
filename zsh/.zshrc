@@ -9,7 +9,12 @@ BREW_PREFIX="/opt/homebrew"
 export PATH="$HOME/.local/bin:$PATH"
 
 # ─── Environment ─────────────────────────────────────────────
-export EDITOR="vim"
+if command -v nvim >/dev/null 2>&1; then
+  export EDITOR="nvim"
+  alias vim="nvim"                # muscle memory, one editor
+else
+  export EDITOR="vim"             # a machine without nvim still works
+fi
 export VISUAL="$EDITOR"
 export PAGER="less"
 export LESS="-R -F -X --mouse"
