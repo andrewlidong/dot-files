@@ -66,15 +66,20 @@ if [[ ! -d "$FZF_TAB" ]]; then
 fi
 ok "fzf-tab ready"
 
-# ─── 6. neovim colourscheme ───────────────────────────────────
-# No plugin manager — nvim loads anything under site/pack/*/start
-# on its own, so a plain clone is the whole install.
-TOKYONIGHT="$HOME/.local/share/nvim/site/pack/colors/start/tokyonight.nvim"
-if [[ ! -d "$TOKYONIGHT" ]]; then
-  info "cloning tokyonight.nvim"
-  git clone -q --depth 1 https://github.com/folke/tokyonight.nvim "$TOKYONIGHT"
+# ─── 6. neovim plugins ────────────────────────────────────────
+# lazy.nvim bootstraps itself from init.lua and pins versions in
+# lazy-lock.json. Sync once headless so the first real launch isn't a
+# wall of install output.
+if command -v nvim >/dev/null 2>&1; then
+  info "syncing neovim plugins"
+  if nvim --headless "+Lazy! sync" +qa >/dev/null 2>&1; then
+    ok "neovim plugins ready"
+  else
+    warn "nvim plugin sync failed — open nvim and run :Lazy sync"
+  fi
+else
+  warn "nvim not installed — skipping plugin sync"
 fi
-ok "tokyonight ready"
 
 # ─── 7. bat theme cache ───────────────────────────────────────
 if command -v bat >/dev/null 2>&1; then

@@ -1,11 +1,12 @@
 -- ─────────────────────────────────────────────────────────────
---  init.lua — deliberately small. No plugin manager; the one
---  plugin (tokyonight) is cloned into nvim's native package dir
---  by install.sh, so there is nothing to bootstrap on first run.
+--  init.lua — options and keymaps live here; plugins live in
+--  lua/plugins/, one file each, loaded by lazy.nvim at the end.
 --
---  Grow this by adding files under lua/ and requiring them here.
+--  :Lazy      manage plugins        :checkhealth   diagnose
+--  :Tutor     learn the basics      <leader> is Space
 -- ─────────────────────────────────────────────────────────────
 
+-- Must be set before lazy.nvim loads, or plugin keymaps bind to the wrong key.
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
@@ -19,7 +20,7 @@ vim.opt.wrap = false
 -- ─── Display ─────────────────────────────────────────────────
 vim.opt.number = true
 vim.opt.relativenumber = true     -- 5j / 3k without counting lines
-vim.opt.signcolumn = "yes"        -- stops the text jogging left and right
+vim.opt.signcolumn = "yes"        -- stops the text jogging when git signs appear
 vim.opt.cursorline = true
 vim.opt.scrolloff = 8             -- keep context above and below
 vim.opt.termguicolors = true      -- Ghostty does truecolor; use it
@@ -47,6 +48,8 @@ vim.opt.mouse = "a"
 vim.opt.confirm = true            -- ask instead of failing on :q with changes
 
 -- ─── Keymaps ─────────────────────────────────────────────────
+-- Plugin keymaps live with their plugin in lua/plugins/, so this
+-- list stays to things that work with no plugins installed.
 local map = vim.keymap.set
 map("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "clear search highlight" })
 map("n", "<leader>w", "<cmd>write<CR>", { desc = "write" })
@@ -74,9 +77,29 @@ vim.api.nvim_create_autocmd("TextYankPost", {
   callback = function() (vim.hl or vim.highlight).on_yank() end,
 })
 
--- ─── Colours ─────────────────────────────────────────────────
--- Cloned by install.sh into ~/.local/share/nvim/site/pack/*/start/.
--- pcall so a fresh checkout without it still opens, just uncoloured.
-if not pcall(vim.cmd.colorscheme, "tokyonight-night") then
-  vim.notify("tokyonight not installed — run ~/dotfiles/install.sh", vim.log.levels.WARN)
+-- ─── Plugins ─────────────────────────────────────────────────
+-- lazy.nvim bootstraps itself on first launch, so a fresh clone of
+-- the dotfiles needs nothing but `nvim`.
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not (vim.uv or vim.loop).fs_stat(lazypath) then
+  local out = vim.fn.system({
+    "git", "clone", "--filter=blob:none", "--branch=stable",
+    "https://github.com/folke/lazy.nvim.git", lazypath,
+  })
+  if vim.v.shell_error ~= 0 then
+    vim.api.nvim_echo({
+      { "Could not clone lazy.nvim:\n", "ErrorMsg" },
+      { out, "WarningMsg" },
+    }, true, {})
+    return
+  end
 end
+vim.opt.rtp:prepend(lazypath)
+
+require("lazy").setup({
+  spec = { { import = "plugins" } },
+  install = { colorscheme = { "tokyonight-night" } },
+  checker = { enabled = false },          -- don't nag about updates
+  change_detection = { notify = false },
+  ui = { border = "rounded" },
+})

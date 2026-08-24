@@ -104,9 +104,12 @@ if command -v nvim >/dev/null 2>&1; then
   cs=$(nvim --headless -c 'echo g:colors_name' -c 'quitall' 2>&1)
   [[ "$cs" == tokyonight* ]] && ok "colorscheme: $cs" \
                              || no "colorscheme is '$cs', expected tokyonight"
-  [[ -d "$HOME/.local/share/nvim/site/pack/colors/start/tokyonight.nvim" ]] \
-    && ok "tokyonight.nvim installed" \
-    || no "tokyonight missing — run ~/dotfiles/install.sh"
+  [[ -f "$HOME/.config/nvim/lazy-lock.json" ]] \
+    && ok "lazy-lock.json present (plugin versions pinned)" \
+    || wa "no lazy-lock.json — open nvim and run :Lazy sync"
+  np=$(nvim --headless -c 'lua io.write(vim.tbl_count(require("lazy.core.config").plugins))' -c 'qa' 2>&1)
+  [[ "$np" =~ ^[0-9]+$ ]] && ok "$np plugins loaded by lazy.nvim" \
+                          || no "lazy.nvim not reporting plugins: $np"
   [[ "$EDITOR" == nvim ]] && ok "EDITOR=nvim" || wa "EDITOR=$EDITOR (open a new shell?)"
 else
   wa "nvim not installed — EDITOR falls back to vim"

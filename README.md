@@ -10,7 +10,7 @@ zsh/        → ~/.zshrc
 starship/   → ~/.config/starship.toml
 bat/        → ~/.config/bat/{config,themes/}
 git/        → ~/.config/git/{shared.gitconfig,ignore}
-nvim/       → ~/.config/nvim/init.lua
+nvim/       → ~/.config/nvim/{init.lua,lua/plugins/}
 bin/        → ~/.local/bin/{tmux-sessionizer,dotfiles-doctor}
 hooks/      → git hooks for this repo itself (not stowed)
 ```
@@ -27,9 +27,9 @@ git clone <this-repo> ~/dotfiles && cd ~/dotfiles && ./install.sh
 
 Idempotent — re-run it any time. It installs the Brewfile, backs up any real
 file that would collide (as `*.pre-dotfiles.<timestamp>`), stows every package,
-fetches tpm + fzf-tab + tokyonight.nvim, builds the bat theme cache, adds an
-`[include]` line to `~/.gitconfig`, and points this repo's `core.hooksPath`
-at `hooks/`.
+fetches tpm + fzf-tab, syncs the neovim plugins, builds the bat theme cache,
+adds an `[include]` line to `~/.gitconfig`, and points this repo's
+`core.hooksPath` at `hooks/`.
 
 ## How it fits together
 
@@ -193,10 +193,13 @@ Aliases: `ls`/`l`/`ll`/`la`/`lt` (eza), `lg` (lazygit), `gs`/`gd`/`gl`/… (git)
 aliased to `nvim` so the muscle memory still lands. `C-a e` in tmux opens a
 popup on whatever `$EDITOR` resolves to.
 
-The config is a single ~70-line `nvim/.config/nvim/init.lua` with no plugin
-manager. The one plugin is the Tokyo Night colourscheme, which `install.sh`
-clones into nvim's native `~/.local/share/nvim/site/pack/colors/start/` — nvim
-loads anything there by itself, so there's no bootstrap on first run.
+Options and keymaps are in `init.lua`; plugins are one file each under
+`lua/plugins/`, managed by **lazy.nvim**, which bootstraps itself on first
+launch. Versions are pinned in `lazy-lock.json` — that file is committed, so
+every machine gets the same plugin revisions. `:Lazy` is the plugin UI,
+`:checkhealth` the diagnostic.
+
+### Editing
 
 | Key                       | Does                                        |
 | ------------------------- | ------------------------------------------- |
@@ -208,12 +211,44 @@ loads anything there by itself, so there's no bootstrap on first run.
 | `J`                       | join lines without moving the cursor        |
 | `<` / `>` in visual       | indent, keeping the selection               |
 
+### Finding — telescope
+
+| Key          | Does                                  |
+| ------------ | ------------------------------------- |
+| `<leader>f`  | find file by name                     |
+| `<leader>g`  | grep the whole project (ripgrep)      |
+| `<leader>b`  | switch between open buffers           |
+| `<leader>r`  | recent files                          |
+| `<leader>/`  | fuzzy-search inside this file         |
+| `<leader>?`  | search `:help`                        |
+| `<leader>d`  | diagnostics                           |
+
+`C-j` / `C-k` move through results and `Esc` closes, matching fzf in the shell.
+
+### Git — gitsigns
+
+| Key                        | Does                                |
+| -------------------------- | ----------------------------------- |
+| `]h` / `[h`                | next / previous changed hunk        |
+| `<leader>hp`               | preview the hunk under the cursor   |
+| `<leader>hs` / `<leader>hr`| stage / reset the hunk              |
+| `<leader>hb`               | blame this line                     |
+
+Hunks are `]h`/`[h` rather than the more usual `]c`/`[c` because
+treesitter-textobjects already uses `]c`/`[c` for "next class".
+
+### Syntax — treesitter
+
+Real parsing, so `daf` deletes a whole method, `cif` changes a function body,
+`vac` selects a class, and `]f`/`[f` jump between functions. `C-space` starts a
+selection at the node under the cursor and widens it each press.
+
 Splits open right and below, matching `C-a |` and `C-a -` in tmux. Yanks go to
 the macOS clipboard, and undo history survives closing a file.
 
-To grow it, add files under `nvim/.config/nvim/lua/` and `require` them from
-`init.lua`. tmux-resurrect already has `@resurrect-strategy-nvim 'session'` set,
-so nvim sessions come back with the tmux session.
+To add a plugin, drop a file in `nvim/.config/nvim/lua/plugins/` and restart —
+lazy installs it. tmux-resurrect already has `@resurrect-strategy-nvim
+'session'` set, so nvim sessions come back with the tmux session.
 
 ## Where the colors live
 
