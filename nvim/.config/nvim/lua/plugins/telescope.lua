@@ -4,14 +4,12 @@
 -- Uses the ripgrep and fd already in the Brewfile.
 return {
   "nvim-telescope/telescope.nvim",
-  -- master, not the 0.1.x tag branch: 0.1.x predates the treesitter rewrite
-  -- and calls nvim-treesitter.parsers.ft_to_lang(), which main removed — the
-  -- pcall around the require succeeds, then the nil field crashes the picker.
-  -- master uses core vim.treesitter.language.get_lang() instead.
-  --
-  -- Note the asymmetry: telescope's current branch is master, treesitter's is
-  -- main. They are the opposite of each other; don't "fix" one to match.
-  branch = "master",
+  -- The 0.2.x release line. Not the 0.1.x branch, which was last touched in
+  -- May 2024 and calls nvim-treesitter.parsers.ft_to_lang() — removed in the
+  -- treesitter rewrite. telescope guards that with pcall(require, …), but the
+  -- module still exists on the new branch, so the guard passes and the nil
+  -- field takes every picker down. 0.2.x uses vim.treesitter.language.get_lang().
+  version = "^0.2",
   dependencies = {
     "nvim-lua/plenary.nvim",
     -- Native sorter, compiled on install. Makes big repos feel instant.
