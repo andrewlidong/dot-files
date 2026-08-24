@@ -11,6 +11,7 @@ starship/   → ~/.config/starship.toml
 bat/        → ~/.config/bat/{config,themes/}
 git/        → ~/.config/git/{shared.gitconfig,ignore}
 bin/        → ~/.local/bin/{tmux-sessionizer,dotfiles-doctor}
+hooks/      → git hooks for this repo itself (not stowed)
 ```
 
 Run **`dotfiles-doctor`** any time to verify everything is installed, linked,
@@ -25,18 +26,35 @@ git clone <this-repo> ~/dotfiles && cd ~/dotfiles && ./install.sh
 
 Idempotent — re-run it any time. It installs the Brewfile, backs up any real
 file that would collide (as `*.pre-dotfiles.<timestamp>`), stows every package,
-fetches tpm + fzf-tab, builds the bat theme cache, and adds an `[include]` line
-to `~/.gitconfig`.
+fetches tpm + fzf-tab, builds the bat theme cache, adds an `[include]` line to
+`~/.gitconfig`, and points this repo's `core.hooksPath` at `hooks/`.
 
 ## How it fits together
 
-`~/.gitconfig` stays **machine-local** — credential helpers and your git
-identity live there and are not in this repo. It just `[include]`s
-`git/.config/git/shared.gitconfig`. Same idea for the shell: `~/.zshrc.local`
-is sourced if it exists and is never committed.
+`~/.gitconfig` stays **machine-local** — credential helpers live there and are
+not in this repo. It `[include]`s `git/.config/git/shared.gitconfig`, which
+carries everything else **including a `[user]` identity**. If you cloned this
+repo, override that in `~/.gitconfig` or you will author commits as its author;
+`install.sh` says whose identity is in effect and warns when it came from here
+rather than from your machine.
 
-Language runtimes and CLI versions come from **mise**, not brew. The Brewfile
-is only terminal furniture.
+Same idea for the shell: `~/.zshrc.local` is sourced if it exists and is never
+committed. Anything machine-specific or secret belongs there.
+
+Language runtimes and CLI versions come from **mise**, not brew — the Brewfile
+installs mise itself plus the rest of the terminal furniture, nothing more.
+
+## Secrets
+
+This repo is public, so a credential that lands in a commit has to be rotated,
+not just deleted — the old object stays reachable in history. `hooks/pre-commit`
+runs [gitleaks](https://github.com/gitleaks/gitleaks) over the staged patch and
+refuses the commit if anything looks like a secret. `core.hooksPath` is set on
+this repo only, so other clones on the machine keep their own hooks.
+
+If gitleaks isn't installed the hook warns and exits 0, so a fresh clone isn't
+uncommittable before `brew bundle` has run. `git commit --no-verify` bypasses it
+for a false positive.
 
 ## Editing
 
