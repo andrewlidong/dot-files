@@ -21,7 +21,6 @@ ROOTS=(
 # Directories that are always offered, even if they aren't under a root.
 ALWAYS=(
   "$HOME/dotfiles"
-  "$HOME/surge-toolbox"
   "$HOME/.config"
 )
 

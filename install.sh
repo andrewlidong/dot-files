@@ -79,10 +79,25 @@ if ! git config --global --get-all include.path 2>/dev/null | grep -qx "$HOME/.c
   info "adding include.path to ~/.gitconfig"
   git config --global --add include.path "$HOME/.config/git/shared.gitconfig"
 fi
-if ! git config --global --get user.name >/dev/null 2>&1; then
+# shared.gitconfig carries an identity, so the include above hands it to
+# anyone who cloned this repo. Say whose it is rather than let them author
+# commits as someone else by accident.
+SHARED="$HOME/.config/git/shared.gitconfig"
+eff_name="$(git config --get user.name  || true)"
+eff_mail="$(git config --get user.email || true)"
+origin="$(git config --show-origin --get user.email 2>/dev/null | cut -f1)"
+origin="${origin#file:}"
+if [[ -z "$eff_mail" ]]; then
   warn "git identity not set — run:"
   warn "  git config --global user.name  'Your Name'"
   warn "  git config --global user.email 'you@example.com'"
+elif [[ -e "$origin" && "$origin" -ef "$SHARED" ]]; then
+  warn "commits will be authored as $eff_name <$eff_mail>,"
+  warn "which comes from this repo's shared.gitconfig. If that isn't you:"
+  warn "  git config --global user.name  'Your Name'"
+  warn "  git config --global user.email 'you@example.com'"
+else
+  ok "git identity: $eff_name <$eff_mail>"
 fi
 ok "git configured"
 
