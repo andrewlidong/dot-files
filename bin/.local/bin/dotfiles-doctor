@@ -121,6 +121,18 @@ if command -v nvim >/dev/null 2>&1; then
   else
     no "treesitter errors while drawing:"; note "$(head -3 <<<"$err")"
   fi
+  # Telescope talks to nvim-treesitter's API, so a treesitter upgrade can break
+  # the pickers while everything above still passes. Actually open each one.
+  tel=$(nvim --headless "$DOT/README.md" -c 'lua
+    local b, bad = require("telescope.builtin"), {}
+    for _, n in ipairs({"find_files","live_grep","buffers","oldfiles","help_tags"}) do
+      local ok = pcall(b[n], {})
+      if not ok then bad[#bad+1] = n end
+      pcall(require("telescope.actions").close, vim.api.nvim_get_current_buf())
+    end
+    io.write(#bad == 0 and "ok" or table.concat(bad, ","))' -c 'qa!' 2>&1 | tail -1)
+  [[ "$tel" == ok ]] && ok "telescope pickers all open" \
+                     || no "telescope pickers failing: $tel"
   [[ "$EDITOR" == nvim ]] && ok "EDITOR=nvim" || wa "EDITOR=$EDITOR (open a new shell?)"
 else
   wa "nvim not installed — EDITOR falls back to vim"
