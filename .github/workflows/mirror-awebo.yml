@@ -25,8 +25,11 @@ jobs:
           MIRROR_TOKEN: ${{ secrets.MIRROR_TOKEN }}
         run: |
           set -euo pipefail
-          if [ -z "${MIRROR_TOKEN}" ]; then
-            echo "::error::MIRROR_TOKEN secret is not set — see dot-files README / mirror setup"
+          # Strip any stray whitespace/newline the secret may carry (a trailing
+          # newline in the pasted token would otherwise make the auth URL malformed).
+          TOKEN="$(printf '%s' "${MIRROR_TOKEN:-}" | tr -d '[:space:]')"
+          if [ -z "${TOKEN}" ]; then
+            echo "::error::MIRROR_TOKEN secret is empty — set it on the dot-files repo"
             exit 1
           fi
           git clone --mirror https://codeberg.org/awebo-chat/awebo.git repo.git
@@ -34,6 +37,6 @@ jobs:
           # Push only heads and tags (avoids refs/pull/* which GitHub rejects),
           # force + prune so the GitHub copy exactly tracks upstream.
           git push --force --prune \
-            "https://x-access-token:${MIRROR_TOKEN}@github.com/andrewlidong/awebo.git" \
+            "https://x-access-token:${TOKEN}@github.com/andrewlidong/awebo.git" \
             "+refs/heads/*:refs/heads/*" "+refs/tags/*:refs/tags/*"
           echo "Mirrored upstream → andrewlidong/awebo at $(git rev-parse --short HEAD)"
