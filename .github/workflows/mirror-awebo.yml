@@ -1,0 +1,39 @@
+name: Mirror Awebo (Codeberg → GitHub)
+
+# Keeps andrewlidong/awebo a mirror of the upstream Awebo repo on Codeberg.
+# Runs on a schedule (GitHub cron is poll-based; it cannot fire the instant
+# Loris pushes) and can be triggered by hand. Hosted here in dot-files — not in
+# the awebo repo itself — because a mirror push would delete a workflow living
+# in the target, so the controller must live in a separate repo.
+
+on:
+  schedule:
+    - cron: '23 * * * *'      # hourly, at :23
+  workflow_dispatch:           # manual "Run workflow" button
+
+concurrency:
+  group: mirror-awebo
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mirror upstream branches and tags into andrewlidong/awebo
+        env:
+          # Fine-grained PAT scoped to andrewlidong/awebo with Contents: read/write.
+          MIRROR_TOKEN: ${{ secrets.MIRROR_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${MIRROR_TOKEN}" ]; then
+            echo "::error::MIRROR_TOKEN secret is not set — see dot-files README / mirror setup"
+            exit 1
+          fi
+          git clone --mirror https://codeberg.org/awebo-chat/awebo.git repo.git
+          cd repo.git
+          # Push only heads and tags (avoids refs/pull/* which GitHub rejects),
+          # force + prune so the GitHub copy exactly tracks upstream.
+          git push --force --prune \
+            "https://x-access-token:${MIRROR_TOKEN}@github.com/andrewlidong/awebo.git" \
+            "+refs/heads/*:refs/heads/*" "+refs/tags/*:refs/tags/*"
+          echo "Mirrored upstream → andrewlidong/awebo at $(git rev-parse --short HEAD)"
