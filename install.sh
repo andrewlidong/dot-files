@@ -31,10 +31,19 @@ fi
 STAMP="$(date +%Y%m%d-%H%M%S)"
 backup_if_real() {
   local target="$1"
-  if [[ -e "$target" && ! -L "$target" ]]; then
-    mv "$target" "$target.pre-dotfiles.$STAMP"
-    warn "moved $target → $(basename "$target").pre-dotfiles.$STAMP"
-  fi
+  # Nothing to back up if it's absent or already a symlink (stow owns it).
+  [[ -e "$target" && ! -L "$target" ]] || return 0
+  # Guard against folded stow dirs: if a parent like ~/.config/bat is itself a
+  # symlink into this repo (~/.config/bat -> DOTFILES/bat/.config/bat), then
+  # ~/.config/bat/config is a real file but lives *inside* the repo. `pwd -P`
+  # resolves symlinked parents; if the target sits under $DOTFILES it's already
+  # ours, and moving it would rename the repo's own file through the symlink.
+  local parent dotdir
+  parent="$(cd "$(dirname "$target")" 2>/dev/null && pwd -P)" || return 0
+  dotdir="$(cd "$DOTFILES" && pwd -P)"
+  [[ "$parent/" == "$dotdir/"* ]] && return 0
+  mv "$target" "$target.pre-dotfiles.$STAMP"
+  warn "moved $target → $(basename "$target").pre-dotfiles.$STAMP"
 }
 backup_if_real "$HOME/.zshrc"
 backup_if_real "$HOME/.config/ghostty/config"
